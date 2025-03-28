@@ -1,5 +1,5 @@
 import * as azdev from 'azure-devops-node-api';
-import { configManager } from './config-manager.js';
+import { configManager } from '../config-manager.js';
 import {
   TeamProject,
   WorkItem,
@@ -13,9 +13,9 @@ import {
   PullRequestCommentRequest,
   PullRequestCommentResponse,
   PullRequestFileContent,
-  WorkItemRelation,
   WorkItemLink,
-} from './types.js';
+  CreateWorkItemParams,
+} from '../types.js';
 
 /**
  * Helper function to safely stringify objects with circular references
@@ -46,6 +46,7 @@ class AzureDevOpsService {
   private workItemClient: any = null;
   private gitClient: any = null;
   private defaultProject: string | undefined;
+  private organizationUrl: string | undefined;
 
   constructor(connection?: azdev.WebApi, defaultProject?: string) {
     if (connection) {
@@ -68,6 +69,9 @@ class AzureDevOpsService {
     if (!organizationUrl || !token) {
       throw new Error('Azure DevOps organization URL and token are required');
     }
+
+    // Store organization URL
+    this.organizationUrl = organizationUrl;
 
     // Create a connection to Azure DevOps
     const authHandler = azdev.getPersonalAccessTokenHandler(token);
@@ -343,8 +347,8 @@ class AzureDevOpsService {
       try {
         const urlParts = relation.url.split('/');
         targetId = parseInt(urlParts[urlParts.length - 1], 10);
-      } catch (error) {
-        console.error('Failed to extract work item ID from URL:', relation.url);
+      } catch (error: any) {
+        console.error('Failed to extract work item ID from URL:', relation.url, error.message);
       }
 
       if (!groupedRelations[relType]) {
@@ -430,7 +434,6 @@ class AzureDevOpsService {
 
     // File size and content handling constants
     const MAX_INLINE_FILE_SIZE = 500000; // Increased to 500KB for inline content
-    const MAX_CHUNK_SIZE = 100000; // 100KB chunks for larger files
     const PREVIEW_SIZE = 10000; // 10KB preview for very large files
 
     // Get detailed content for each change
@@ -706,7 +709,7 @@ class AzureDevOpsService {
 
             // This may not give us the exact size, but we'll try to estimate
             totalContentLength = fileInfo?._response?.bodyAsText?.length || contentSize;
-          } catch (error) {
+          } catch (_error: any) {
             // If we can't get the total size, use the current chunk size or try another method
             totalContentLength = contentSize;
           }
@@ -716,7 +719,7 @@ class AzureDevOpsService {
           } else {
             try {
               contentStr = content.toString('utf8');
-            } catch (error) {
+            } catch (_error: any) {
               contentStr = '[Error converting content to string]';
             }
           }
@@ -734,7 +737,7 @@ class AzureDevOpsService {
             contentStr = safeStringify(content);
             contentSize = contentStr.length;
             totalContentLength = contentSize;
-          } catch (error) {
+          } catch (_error: any) {
             contentStr = '[Error: could not serialize content]';
             contentSize = contentStr.length;
             totalContentLength = contentSize;
@@ -987,7 +990,7 @@ class AzureDevOpsService {
             );
 
             totalContentLength = fileInfo.contentMetadata?.contentLength || contentSize;
-          } catch (error) {
+          } catch (_error: any) {
             // If we can't get the total size, use the current chunk size
             totalContentLength = contentSize;
           }
@@ -997,7 +1000,7 @@ class AzureDevOpsService {
           } else {
             try {
               contentStr = content.toString('utf8');
-            } catch (error) {
+            } catch (_error: any) {
               contentStr = '[Error converting content to string]';
             }
           }
@@ -1015,7 +1018,7 @@ class AzureDevOpsService {
             contentStr = safeStringify(content);
             contentSize = contentStr.length;
             totalContentLength = contentSize;
-          } catch (error) {
+          } catch (_error: any) {
             contentStr = '[Error: could not serialize content]';
             contentSize = contentStr.length;
             totalContentLength = contentSize;
@@ -1181,6 +1184,61 @@ class AzureDevOpsService {
         `Failed to create comment: ${error instanceof Error ? error.message : String(error)}`
       );
     }
+  }
+
+  async createWorkItem(params: CreateWorkItemParams) {
+    const { project, type, title, description, parentId, fields = {} } = params;
+
+    const patchDocument = [
+      {
+        op: 'add',
+        path: '/fields/System.Title',
+        value: title,
+      },
+    ];
+
+    if (description) {
+      patchDocument.push({
+        op: 'add',
+        path: '/fields/System.Description',
+        value: description,
+      });
+    }
+
+    // Add any additional custom fields
+    for (const [key, value] of Object.entries(fields)) {
+      patchDocument.push({
+        op: 'add',
+        path: `/fields/${key}`,
+        value,
+      });
+    }
+
+    // Create the work item using workItemClient
+    const workItem = await this.workItemClient.createWorkItem(
+      undefined,
+      patchDocument,
+      project,
+      type,
+      undefined,
+      undefined,
+      undefined,
+      true
+    );
+
+    // If a parent ID is provided, create a parent-child relationship
+    if (parentId && workItem?.id) {
+      await this.workItemClient.createRelation(
+        workItem.id,
+        {
+          rel: 'System.LinkTypes.Hierarchy-Reverse',
+          url: `${this.organizationUrl}/_apis/wit/workItems/${parentId}`,
+        },
+        project
+      );
+    }
+
+    return workItem;
   }
 }
 

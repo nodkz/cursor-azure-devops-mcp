@@ -197,3 +197,12 @@ export interface PullRequestFileContent {
   isBinary?: boolean;
   contentLength?: number; // Total content length for the file
 }
+
+export interface CreateWorkItemParams {
+  project: string;
+  type: string;
+  title: string;
+  description?: string;
+  parentId?: number;
+  fields?: Record<string, any>;
+}

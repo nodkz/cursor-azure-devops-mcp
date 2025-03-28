@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { azureDevOpsService } from './azure-devops-service.js';
+import { azureDevOpsService } from './tools/azure-devops-service.js';
 import { configManager } from './config-manager.js';
 
 /**

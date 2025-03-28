@@ -251,7 +251,7 @@ export class ConfigManager {
             }
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // Silently ignore errors reading settings files
       }
     }
@@ -263,10 +263,6 @@ export class ConfigManager {
    * Load configuration from environment variables / .env file
    */
   private loadEnvConfig(): Partial<Config> {
-    // Load .env file from various locations
-    const rootEnvPath = path.resolve('.env');
-    const rootEnvResult = dotenv.config({ path: rootEnvPath });
-
     // Also try loading from the current working directory
     const cwd = process.cwd();
     const cwdEnvPath = path.join(cwd, '.env');
