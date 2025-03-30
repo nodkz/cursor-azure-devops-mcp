@@ -130,35 +130,6 @@ export interface WorkItemAttachment {
   content?: string | Buffer; // May include actual content in base64 or binary
 }
 
-// Pull Request Change
-export interface PullRequestChange {
-  changeId: string;
-  item?: {
-    objectId?: string;
-    originalObjectId?: string;
-    path?: string;
-    contentMetadata?: {
-      fileName?: string;
-      extension?: string;
-    };
-    isFolder?: boolean;
-  };
-  changeType?: string; // Add, Edit, Delete
-  originalContent?: string; // Content before change
-  modifiedContent?: string; // Content after change
-  originalContentSize?: number; // Size of original file in bytes
-  modifiedContentSize?: number; // Size of modified file in bytes
-  originalContentPreview?: string; // Preview of content for large files
-  modifiedContentPreview?: string; // Preview of content for large files
-  isBinary?: boolean; // Whether the file is binary
-  isFolder?: boolean; // Whether the item is a folder
-}
-
-export interface PullRequestChanges {
-  changeEntries: PullRequestChange[];
-  totalCount: number;
-}
-
 // New interfaces for PR comments
 export interface PullRequestCommentRequest {
   repositoryId: string;

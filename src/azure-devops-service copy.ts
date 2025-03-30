@@ -1,5 +1,5 @@
 import * as azdev from 'azure-devops-node-api';
-import { configManager } from '../config-manager.js';
+import { configManager } from './config-manager.js';
 import {
   TeamProject,
   WorkItem,
@@ -15,27 +15,8 @@ import {
   PullRequestFileContent,
   WorkItemLink,
   CreateWorkItemParams,
-} from '../types.js';
-
-/**
- * Helper function to safely stringify objects with circular references
- */
-function safeStringify(obj: any): string {
-  const seen = new WeakSet();
-  return JSON.stringify(obj, (key, value) => {
-    // Skip _httpMessage, socket and similar properties that cause circular references
-    if (key === '_httpMessage' || key === 'socket' || key === 'connection' || key === 'agent') {
-      return '[Circular]';
-    }
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return '[Circular]';
-      }
-      seen.add(value);
-    }
-    return value;
-  });
-}
+} from './types.js';
+import { safeStringify } from './helpers.js';
 
 /**
  * Service for interacting with Azure DevOps API

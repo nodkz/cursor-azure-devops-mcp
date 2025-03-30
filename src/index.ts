@@ -3,7 +3,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { configManager } from './config-manager.js';
-import { azureDevOpsService } from './tools/azure-devops-service.js';
+import { azureDevOpsService } from './azure-devops-service.js';
 import { initTools } from './tools/index.js';
 import { version, name } from '../package.json';
 
@@ -11,7 +11,7 @@ import { version, name } from '../package.json';
 const server = new McpServer({
   name,
   version,
-  description: 'MCP Server for Azure DevOps integration with Cursor IDE',
+  description: 'MCP Server for Azure DevOps integration',
 });
 
 // Start server
@@ -34,7 +34,7 @@ async function main() {
 
     // Initialize Azure DevOps API connection
     try {
-      await azureDevOpsService.initialize();
+      await azureDevOpsService.testConnection();
       console.info('Azure DevOps API connection initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Azure DevOps API connection:', error);

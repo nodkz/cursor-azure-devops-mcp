@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { azureDevOpsService } from './tools/azure-devops-service.js';
+import { azureDevOpsService } from './azure-devops-service.js';
 import { configManager } from './config-manager.js';
 
 /**
@@ -15,12 +15,13 @@ async function testConnection() {
 
   try {
     // Initialize the Azure DevOps API client
-    await azureDevOpsService.initialize();
+    await azureDevOpsService.testConnection();
     console.log('✅ Connection successful!');
 
     // Get projects
     console.log('\nFetching projects...');
-    const projects = await azureDevOpsService.getProjects();
+    const coreApi = await azureDevOpsService.getCoreApi();
+    const projects = await coreApi.getProjects();
     console.log(`Found ${projects.length} projects:`);
 
     // Display projects

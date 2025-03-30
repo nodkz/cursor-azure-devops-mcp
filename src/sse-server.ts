@@ -4,7 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import { azureDevOpsService } from './tools/azure-devops-service.js';
+import { azureDevOpsService } from './azure-devops-service.js';
 import { config } from './config.js';
 import { version, name } from '../package.json';
 import { initTools } from './tools/index.js';

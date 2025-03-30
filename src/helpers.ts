@@ -170,3 +170,23 @@ export function safeResponse(result: any): string {
     }
   }
 }
+
+/**
+ * Helper function to safely stringify objects with circular references
+ */
+export function safeStringify(obj: any): string {
+  const seen = new WeakSet();
+  return JSON.stringify(obj, (key, value) => {
+    // Skip _httpMessage, socket and similar properties that cause circular references
+    if (key === '_httpMessage' || key === 'socket' || key === 'connection' || key === 'agent') {
+      return '[Circular]';
+    }
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return '[Circular]';
+      }
+      seen.add(value);
+    }
+    return value;
+  });
+}
