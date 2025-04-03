@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { AzureDevOpsService } from '../azure-devops-service.js';
 import { z } from 'zod';
 import { getWorkItemLinks } from './ado_work_item_links.js';
+import { keepWISystemFields, truncateLongStrings } from './utilities/cleanupWorkItem.js';
 
 export default function init(server: McpServer, azureDevOpsService: AzureDevOpsService): void {
   server.tool(
@@ -29,12 +30,13 @@ export default function init(server: McpServer, azureDevOpsService: AzureDevOpsS
 
       // Get the full work item details for all linked items
       const linkedWorkItems = await workItemApi.getWorkItems(linkedIds);
+      const result = truncateLongStrings(linkedWorkItems?.map(keepWISystemFields));
 
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(linkedWorkItems, null, 2),
+            text: JSON.stringify(result, null, 2),
           },
         ],
       };
